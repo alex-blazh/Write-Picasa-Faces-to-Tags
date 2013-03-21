@@ -72,7 +72,7 @@ local function faceToTag()
 	   				local keyword = catalog:createKeyword(name, {}, true, parrent, true)
 	   				logger:debug("keyword created: " .. tostring(keyword))
 	   				photo:addKeyword(keyword)
-	   				--photo:setRawMetadata('PersonInImage', keyword) --doesn't work
+	   				--photo:setRawMetadata('personShown', keyword) --doesn't work
 		 			logger:debug("keyword added: " .. name)
 		 		end)
 	 		end
