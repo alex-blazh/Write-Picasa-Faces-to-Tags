@@ -42,7 +42,7 @@ local function faceToTag()
 
  	local parrent
  	catalog:withWriteAccessDo("Create parrent keyword", function ()  
-    	parrent = catalog:createKeyword("names", {}, false, nil, true)
+    	parrent = catalog:createKeyword("#names", {}, false, nil, true)
  		--logger:debug("parrent keyword created: " .. tostring(parrent))
     end)
 
@@ -57,7 +57,9 @@ local function faceToTag()
 	 	for i,exifArg in ipairs(exifArgs) do
 	 		local exeCmd ='"' .. exeFile.." "..exifArg.." "..path .. '"'
  			local status = LrTasks.execute(exeCmd)
- 			if io.open(redirect):read() == nil then break end --check is there any names in the file
+ 			local f = io.open(redirect)
+ 			if io.input(f):read() == nil then break end --check is there any names in the file
+ 			f:close()
  			--logger:debug(exeCmd)
 		 	if status ~= 0
 		 		then logger:debug("Error "..exeCmd)
@@ -65,19 +67,29 @@ local function faceToTag()
 	 		end
 	 	end
 
-	 	for name in  io.lines(redirect) do
+	 	local personShown = ""
+	 	local f = io.input(redirect)
+	 	for name in  f:lines() do
 	 		if name ~= nil then -- check is there any pleople on photo	
-	   			logger:debug(name)
+	   			--logger:debug(name)
+	   			if personShown == "" then personShown = name
+	   				else personShown = personShown..', '..name 
+	   			end
+
 	   			catalog:withWriteAccessDo("Adding name keywords", function ()  
 	   				local keyword = catalog:createKeyword(name, {}, true, parrent, true)
 	   				logger:debug("keyword created: " .. tostring(keyword))
 	   				photo:addKeyword(keyword)
-	   				--photo:setRawMetadata('personShown', keyword) --doesn't work
+	   				--photo:setRawMetadata('personShown', name) --doesn't work
 		 			logger:debug("keyword added: " .. name)
 		 		end)
 	 		end
 	 	end
-
+	 	f:close()
+		catalog:withWriteAccessDo("Adding Person Shown", function ()  
+		photo:setRawMetadata('personShown', personShown)
+		logger:debug("Person writed: " ..personShown )
+		end)
 --[[
 	 	names = photo:getFormattedMetadata('personShown')
 	 	logger:debug(names)
